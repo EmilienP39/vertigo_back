@@ -21,7 +21,7 @@ class Image
     #[ORM\Column(length: 255)]
     private ?string $Nom = null;
 
-    #[ORM\ManyToOne(inversedBy: 'Images')]
+    #[ORM\ManyToOne(inversedBy: 'images')]
     private ?Article $article = null;
 
     public function getId(): ?int

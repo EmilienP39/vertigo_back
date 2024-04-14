@@ -3,11 +3,6 @@
 namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
-use ApiPlatform\Metadata\Delete;
-use ApiPlatform\Metadata\Get;
-use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Put;
 use App\Repository\ArticleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -15,11 +10,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ArticleRepository::class)]
-#[Get]
-#[Put(security: "is_granted('ROLE_ADMIN') or object.owner == user")]
-#[GetCollection]
-#[Post(security: "is_granted('ROLE_ADMIN')")]
-#[Delete(security: "is_granted('ROLE_ADMIN')")]
+#[ApiResource(security: "is_granted('ROLE_USER')")]
 class Article
 {
     #[ORM\Id]
@@ -28,22 +19,28 @@ class Article
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $Titre = null;
+    private ?string $titre = null;
 
-    #[ORM\Column(length: 255)]
-    private ?string $Contenu = null;
+    #[ORM\Column(type: Types::TEXT)]
+    private ?string $contenu = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $DatePublication = null;
+    private ?\DateTimeInterface $datePublication = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $Auteur = null;
+    private ?string $auteur = null;
+
+    /**
+     * @var Collection<int, Categorie>
+     */
+    #[ORM\ManyToMany(targetEntity: Categorie::class, inversedBy: 'articles')]
+    private Collection $categories;
 
     /**
      * @var Collection<int, Image>
      */
     #[ORM\OneToMany(targetEntity: Image::class, mappedBy: 'article')]
-    private Collection $Images;
+    private Collection $images;
 
     /**
      * @var Collection<int, Source>
@@ -51,17 +48,11 @@ class Article
     #[ORM\ManyToMany(targetEntity: Source::class, inversedBy: 'articles')]
     private Collection $Sources;
 
-    /**
-     * @var Collection<int, Categorie>
-     */
-    #[ORM\ManyToMany(targetEntity: Categorie::class, inversedBy: 'articles')]
-    private Collection $Categorie;
-
     public function __construct()
     {
-        $this->Images = new ArrayCollection();
+        $this->categories = new ArrayCollection();
+        $this->images = new ArrayCollection();
         $this->Sources = new ArrayCollection();
-        $this->Categorie = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -71,48 +62,72 @@ class Article
 
     public function getTitre(): ?string
     {
-        return $this->Titre;
+        return $this->titre;
     }
 
-    public function setTitre(string $Titre): static
+    public function setTitre(string $titre): static
     {
-        $this->Titre = $Titre;
+        $this->titre = $titre;
 
         return $this;
     }
 
     public function getContenu(): ?string
     {
-        return $this->Contenu;
+        return $this->contenu;
     }
 
-    public function setContenu(string $Contenu): static
+    public function setContenu(string $contenu): static
     {
-        $this->Contenu = $Contenu;
+        $this->contenu = $contenu;
 
         return $this;
     }
 
     public function getDatePublication(): ?\DateTimeInterface
     {
-        return $this->DatePublication;
+        return $this->datePublication;
     }
 
-    public function setDatePublication(\DateTimeInterface $DatePublication): static
+    public function setDatePublication(\DateTimeInterface $datePublication): static
     {
-        $this->DatePublication = $DatePublication;
+        $this->datePublication = $datePublication;
 
         return $this;
     }
 
     public function getAuteur(): ?string
     {
-        return $this->Auteur;
+        return $this->auteur;
     }
 
-    public function setAuteur(string $Auteur): static
+    public function setAuteur(string $auteur): static
     {
-        $this->Auteur = $Auteur;
+        $this->auteur = $auteur;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Categorie>
+     */
+    public function getCategories(): Collection
+    {
+        return $this->categories;
+    }
+
+    public function addCategory(Categorie $category): static
+    {
+        if (!$this->categories->contains($category)) {
+            $this->categories->add($category);
+        }
+
+        return $this;
+    }
+
+    public function removeCategory(Categorie $category): static
+    {
+        $this->categories->removeElement($category);
 
         return $this;
     }
@@ -122,13 +137,13 @@ class Article
      */
     public function getImages(): Collection
     {
-        return $this->Images;
+        return $this->images;
     }
 
     public function addImage(Image $image): static
     {
-        if (!$this->Images->contains($image)) {
-            $this->Images->add($image);
+        if (!$this->images->contains($image)) {
+            $this->images->add($image);
             $image->setArticle($this);
         }
 
@@ -137,7 +152,7 @@ class Article
 
     public function removeImage(Image $image): static
     {
-        if ($this->Images->removeElement($image)) {
+        if ($this->images->removeElement($image)) {
             // set the owning side to null (unless already changed)
             if ($image->getArticle() === $this) {
                 $image->setArticle(null);
@@ -167,30 +182,6 @@ class Article
     public function removeSource(Source $source): static
     {
         $this->Sources->removeElement($source);
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Categorie>
-     */
-    public function getCategorie(): Collection
-    {
-        return $this->Categorie;
-    }
-
-    public function addCategorie(Categorie $categorie): static
-    {
-        if (!$this->Categorie->contains($categorie)) {
-            $this->Categorie->add($categorie);
-        }
-
-        return $this;
-    }
-
-    public function removeCategorie(Categorie $categorie): static
-    {
-        $this->Categorie->removeElement($categorie);
 
         return $this;
     }
