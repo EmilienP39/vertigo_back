@@ -21,6 +21,9 @@ class Image
     #[ORM\Column(length: 255)]
     private ?string $Nom = null;
 
+    #[ORM\ManyToOne(inversedBy: 'Images')]
+    private ?Article $article = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -46,6 +49,18 @@ class Image
     public function setNom(string $Nom): static
     {
         $this->Nom = $Nom;
+
+        return $this;
+    }
+
+    public function getArticle(): ?Article
+    {
+        return $this->article;
+    }
+
+    public function setArticle(?Article $article): static
+    {
+        $this->article = $article;
 
         return $this;
     }
