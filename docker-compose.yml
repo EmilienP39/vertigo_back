@@ -1,0 +1,48 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: fandf
+      POSTGRES_USER: 'app'
+      POSTGRES_PASSWORD: 'app'
+    volumes:
+      - ./containers/postgresql/create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/01-create-multiple-postgresql-databases.sh
+      - db-data:/var/lib/postgresql/data:rw
+
+  nginx:
+    image: nginx:1.17.5-alpine
+    ports:
+      - 80:80
+    volumes:
+      - .:/var/www/app
+      - ./containers/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-fpm
+
+
+  php-fpm:
+    build:
+        context: .
+        dockerfile: containers/php-fpm/Dockerfile
+    volumes:
+      - .:/var/www/app
+      - build_check:/check
+    depends_on:
+      - db
+
+### Adminer ###
+  adminer:
+    image: adminer:latest
+    ports:
+      #- 8082:8080
+      - 8282:8080
+
+
+volumes:
+  gitea:
+    driver: local
+  build_check:
+  db-data:
